@@ -1,65 +1,106 @@
-import Image from "next/image";
+'use client'
+import { useState } from 'react'
+
+interface EventResult {
+  id: string
+  name: string
+  date: string
+  venue: string
+}
+
+interface GenerateResult {
+  success: boolean
+  event?: EventResult
+  total?: number
+  error?: string
+}
 
 export default function Home() {
+  const [form, setForm] = useState({
+    eventName: '',
+    eventDate: '',
+    eventVenue: '',
+    quantity: 100
+  })
+  const [loading, setLoading] = useState(false)
+  const [result, setResult] = useState<GenerateResult | null>(null)
+
+  const handleSubmit = async () => {
+    setLoading(true)
+    const res = await fetch('/api/tickets/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(form)
+    })
+    const data: GenerateResult = await res.json()
+    setResult(data)
+    setLoading(false)
+  }
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
+    <main className="min-h-screen bg-gray-50 flex items-center justify-center p-8">
+      <div className="bg-white rounded-2xl shadow-lg p-8 w-full max-w-md">
+        <h1 className="text-2xl font-bold text-gray-800 mb-6">🎟️ Generar Boletos</h1>
+
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Nombre del evento</label>
+            <input
+              className="w-full border rounded-lg px-3 py-2 text-gray-800"
+              placeholder="Ej: Boda de Ana y Carlos"
+              value={form.eventName}
+              onChange={e => setForm({...form, eventName: e.target.value})}
             />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Fecha</label>
+            <input
+              type="datetime-local"
+              className="w-full border rounded-lg px-3 py-2 text-gray-800"
+              value={form.eventDate}
+              onChange={e => setForm({...form, eventDate: e.target.value})}
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Lugar</label>
+            <input
+              className="w-full border rounded-lg px-3 py-2 text-gray-800"
+              placeholder="Ej: Salón Versalles, Guadalajara"
+              value={form.eventVenue}
+              onChange={e => setForm({...form, eventVenue: e.target.value})}
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Cantidad de boletos</label>
+            <input
+              type="number"
+              className="w-full border rounded-lg px-3 py-2 text-gray-800"
+              value={form.quantity}
+              onChange={e => setForm({...form, quantity: parseInt(e.target.value)})}
+            />
+          </div>
+
+          <button
+            onClick={handleSubmit}
+            disabled={loading}
+            className="w-full bg-blue-600 text-white rounded-lg py-3 font-semibold hover:bg-blue-700 disabled:opacity-50"
           >
-            Documentation
-          </a>
+            {loading ? 'Generando...' : 'Generar Boletos'}
+          </button>
         </div>
-      </main>
-    </div>
-  );
+
+        {result && (
+          <div className={`mt-6 p-4 rounded-lg ${result.success ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'}`}>
+            {result.success
+              ? `✅ ¡Listo! Se crearon ${result.total} boletos para "${result.event?.name}"`
+              : `❌ Error: ${result.error}`
+            }
+          </div>
+        )}
+      </div>
+    </main>
+  )
 }
