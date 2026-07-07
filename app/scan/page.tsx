@@ -9,54 +9,60 @@ export default function ScanPage() {
 
   useEffect(() => {
     return () => {
-      if (scannerRef.current) {
-        (scannerRef.current as { clear: () => void }).clear()
-      }
+      stopScanner()
     }
   }, [])
+
+  const stopScanner = async () => {
+    if (scannerRef.current) {
+      const scanner = scannerRef.current as { stop: () => Promise<void> }
+      try { await scanner.stop() } catch {}
+      scannerRef.current = null
+    }
+    setScanning(false)
+  }
 
   const startScanner = async () => {
     setScanning(true)
     setResult(null)
 
-    const { Html5QrcodeScanner } = await import('html5-qrcode')
-
-    const scanner = new Html5QrcodeScanner(
-      'qr-reader',
-      { fps: 10, qrbox: { width: 250, height: 250 } },
-      false
-    )
-
+    const { Html5Qrcode } = await import('html5-qrcode')
+    const scanner = new Html5Qrcode('qr-reader')
     scannerRef.current = scanner
 
-    scanner.render(
-      async (decodedText: string) => {
-        scanner.clear()
-        setScanning(false)
-        setLoading(true)
+    try {
+      await scanner.start(
+        { facingMode: 'environment' }, // cámara trasera directamente
+        { fps: 10, qrbox: { width: 250, height: 250 } },
+        async (decodedText: string) => {
+          await stopScanner()
+          setLoading(true)
 
-        // Extraer el UUID de la URL
-        const ticketId = decodedText.includes('/ticket/')
-          ? decodedText.split('/ticket/')[1]
-          : decodedText
+          const ticketId = decodedText.includes('/ticket/')
+            ? decodedText.split('/ticket/')[1]
+            : decodedText
 
-        const res = await fetch('/api/tickets/validate', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ticketId })
-        })
+          const res = await fetch('/api/tickets/validate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ticketId })
+          })
 
-        const data = await res.json()
-        setResult(data)
-        setLoading(false)
-      },
-      () => {}
-    )
+          const data = await res.json()
+          setResult(data)
+          setLoading(false)
+        },
+        () => {}
+      )
+    } catch {
+      setScanning(false)
+      alert('No se pudo acceder a la cámara. Verifica los permisos.')
+    }
   }
 
-  const reset = () => {
+  const reset = async () => {
+    await stopScanner()
     setResult(null)
-    setScanning(false)
     setLoading(false)
   }
 
@@ -71,19 +77,27 @@ export default function ScanPage() {
             onClick={startScanner}
             className="w-full bg-blue-600 text-white rounded-2xl py-4 text-lg font-semibold hover:bg-blue-700"
           >
-            Iniciar Escáner
+            📷 Abrir Cámara
           </button>
         )}
 
         {scanning && (
-          <div className="bg-white rounded-2xl overflow-hidden">
-            <div id="qr-reader" className="w-full" />
+          <div className="space-y-3">
+            <div className="bg-black rounded-2xl overflow-hidden">
+              <div id="qr-reader" className="w-full" />
+            </div>
+            <button
+              onClick={stopScanner}
+              className="w-full border border-gray-600 text-gray-300 rounded-xl py-3 hover:bg-gray-800"
+            >
+              Cancelar
+            </button>
           </div>
         )}
 
         {loading && (
           <div className="text-center">
-            <div className="text-5xl mb-4 animate-spin">⏳</div>
+            <div className="text-5xl mb-4">⏳</div>
             <p className="text-white text-lg">Validando boleto...</p>
           </div>
         )}
