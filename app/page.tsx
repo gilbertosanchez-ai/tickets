@@ -161,13 +161,16 @@ const esAdmin = userId === ADMIN_ID
             </div>
           </div>
           <div className="flex gap-2">
-            <a href="/precios" className="text-sm bg-blue-600 text-white px-3 py-1 rounded-lg hover:bg-blue-700">
-              Comprar boletos
-            </a>
-            <button onClick={handleLogout} className="text-sm text-gray-500 hover:text-gray-700">
-              Salir
-            </button>
-          </div>
+  <a href="/eventos" className="text-sm bg-gray-200 text-gray-700 px-3 py-1 rounded-lg hover:bg-gray-300">
+    Mis eventos
+  </a>
+  <a href="/precios" className="text-sm bg-blue-600 text-white px-3 py-1 rounded-lg hover:bg-blue-700">
+    Comprar boletos
+  </a>
+  <button onClick={handleLogout} className="text-sm text-gray-500 hover:text-gray-700">
+    Salir
+  </button>
+</div>
         </div>
 
         {/* Pasos */}
