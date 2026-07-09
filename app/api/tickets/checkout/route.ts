@@ -10,10 +10,10 @@ const supabase = createClient(
 )
 
 const PLANES: Record<string, { priceId: string; boletos: number; nombre: string }> = {
-  starter: { priceId: 'price_1Tqkrq0PwVndiXSQgg6jujJy', boletos: 100, nombre: 'Starter 100 boletos' },
-  popular: { priceId: 'price_1Tqkrq0PwVndiXSQgg6jujJy', boletos: 500, nombre: 'Popular 500 boletos' },
-  pro: { priceId: 'price_1Tqkrq0PwVndiXSQgg6jujJy', boletos: 2000, nombre: 'Pro 2,000 boletos' },
-  graduacion: { priceId: 'price_1Tqkrq0PwVndiXSQgg6jujJy', boletos: 10000, nombre: 'Graduación 10,000 boletos' },
+  starter: { priceId: 'price_1TrPOE0PwVndiXSQxLOttril', boletos: 100, nombre: 'Starter 100 boletos' },
+  popular: { priceId: 'price_1TrPOc0PwVndiXSQhD8TBv68', boletos: 500, nombre: 'Popular 500 boletos' },
+  pro: { priceId: 'price_1TrPOz0PwVndiXSQB9xyfwA4', boletos: 2000, nombre: 'Pro 2,000 boletos' },
+  graduacion: { priceId: 'price_1TrPPM0PwVndiXSQvNvT30Ro', boletos: 10000, nombre: 'Graduación 10,000 boletos' },
 }
 
 export async function POST(request: Request) {
