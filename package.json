@@ -9,13 +9,14 @@
     "lint": "eslint"
   },
   "dependencies": {
-    "@napi-rs/canvas": "^1.0.2",
     "@stripe/stripe-js": "^9.9.0",
     "@supabase/ssr": "^0.12.0",
     "@supabase/supabase-js": "^2.110.0",
     "@zxing/browser": "^0.2.1",
     "@zxing/library": "^0.23.0",
+    "canvas": "^3.2.3",
     "html5-qrcode": "^2.3.8",
+    "install": "^0.13.0",
     "jszip": "^3.10.1",
     "next": "16.2.10",
     "pdf-lib": "^1.17.1",
@@ -35,5 +36,11 @@
     "eslint-config-next": "16.2.10",
     "tailwindcss": "^4",
     "typescript": "^5"
+  },
+  "allowScripts": {
+    "@napi-rs/canvas@1.0.2": true,
+    "sharp@0.34.5": true,
+    "sharp@0.35.3": true,
+    "canvas@3.2.3": true
   }
 }
