@@ -11,55 +11,55 @@ const supabase = createClient(
 
 export async function POST(request: Request) {
   try {
-    const { eventId, imageBase64, qrX, qrY, qrSize } = await request.json()
+    const { eventId } = await request.json()
 
-    // 1. Obtener todos los boletos del evento
-    const { data: tickets, error } = await supabase
+    // 1. Obtener plantilla del evento
+    const { data: template, error: templateError } = await supabase
+      .from('ticket_templates')
+      .select('*')
+      .eq('event_id', eventId)
+      .single()
+
+    if (templateError || !template) {
+      throw new Error('No se encontró el diseño del evento')
+    }
+
+    // 2. Descargar imagen de Storage
+    const { data: imageData, error: imageError } = await supabase.storage
+      .from('designs')
+      .download(template.design_file_url)
+
+    if (imageError || !imageData) throw new Error('No se pudo descargar el diseño')
+
+    const imageBuffer = Buffer.from(await imageData.arrayBuffer())
+
+    // 3. Obtener boletos
+    const { data: tickets, error: ticketsError } = await supabase
       .from('tickets')
       .select('*')
       .eq('event_id', eventId)
       .order('ticket_number')
 
-    if (error || !tickets) throw new Error('No se encontraron boletos')
+    if (ticketsError || !tickets) throw new Error('No se encontraron boletos')
 
-    // 2. Convertir imagen base64 a buffer
-    const base64Data = imageBase64.replace(/^data:image\/\w+;base64,/, '')
-    const imageBuffer = Buffer.from(base64Data, 'base64')
-
-    // 3. Guardar diseño en Storage
-    const fileName = `${eventId}/design.png`
-    await supabase.storage
-      .from('designs')
-      .upload(fileName, imageBuffer, {
-        contentType: 'image/png',
-        upsert: true
-      })
-
-    // 4. Guardar posición del QR en ticket_templates
-    await supabase
-      .from('ticket_templates')
-      .upsert({
-        event_id: eventId,
-        design_file_url: fileName,
-        qr_x: qrX,
-        qr_y: qrY,
-        qr_size: qrSize
-      })
-
-    // 5. Crear ZIP
+    // 4. Generar ZIP
     const zip = new JSZip()
 
     for (const ticket of tickets) {
       const ticketUrl = `${process.env.NEXT_PUBLIC_APP_URL}/ticket/${ticket.id}`
 
       const qrBuffer = await QRCode.toBuffer(ticketUrl, {
-        width: qrSize,
+        width: template.qr_size,
         margin: 1,
         color: { dark: '#000000', light: '#ffffff' }
       })
 
       const finalImage = await sharp(imageBuffer)
-        .composite([{ input: qrBuffer, left: Math.round(qrX), top: Math.round(qrY) }])
+        .composite([{
+          input: qrBuffer,
+          left: Math.round(template.qr_x),
+          top: Math.round(template.qr_y)
+        }])
         .png()
         .toBuffer()
 
