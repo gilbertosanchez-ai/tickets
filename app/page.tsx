@@ -1,6 +1,7 @@
 'use client'
-import { useState, useRef } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Image from 'next/image'
+import { createBrowserClient } from '@supabase/ssr'
 
 type Step = 'event' | 'design' | 'done'
 
@@ -19,28 +20,54 @@ export default function Home() {
   const [imageSize, setImageSize] = useState({ width: 0, height: 0 })
   const [dragging, setDragging] = useState(false)
   const [done, setDone] = useState<{ zipBase64: string; total: number } | null>(null)
+  const [userId, setUserId] = useState<string | null>(null)
+  const [creditos, setCreditos] = useState<number | null>(null)
   const imageRef = useRef<HTMLImageElement>(null)
 
-  // Paso 1: Crear evento
+  const supabase = createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
+
+  useEffect(() => {
+    const cargarUsuario = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        setUserId(user.id)
+        const { data: credits } = await supabase
+          .from('credits')
+          .select('boletos')
+          .eq('user_id', user.id)
+          .single()
+        setCreditos(credits?.boletos ?? 0)
+      }
+    }
+    cargarUsuario()
+  }, [])
+
   const handleCreateEvent = async () => {
     if (!form.eventName || !form.eventDate || !form.eventVenue) return alert('Llena todos los campos')
+    if (!userId) return alert('Debes iniciar sesión')
+    if (creditos !== null && creditos < form.quantity) {
+      return alert(`No tienes suficientes boletos. Tienes ${creditos} y necesitas ${form.quantity}. Compra más en /precios`)
+    }
     setLoading(true)
     const res = await fetch('/api/tickets/generate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(form)
+      body: JSON.stringify({ ...form, userId })
     })
     const data = await res.json()
     setLoading(false)
     if (data.success) {
       setEvent(data.event)
+      setCreditos(data.creditosRestantes)
       setStep('design')
     } else {
-      alert('Error: ' + data.error)
+      alert(data.error)
     }
   }
 
-  // Paso 2: Manejar imagen
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
@@ -68,7 +95,6 @@ export default function Home() {
     setTimeout(() => setDragging(false), 300)
   }
 
-  // Paso 3: Generar boletos
   const handleGenerate = async () => {
     if (!image) return alert('Sube una imagen primero')
     setLoading(true)
@@ -109,11 +135,39 @@ export default function Home() {
     setDone(null)
   }
 
+  const handleLogout = async () => {
+    await supabase.auth.signOut()
+    window.location.href = '/login'
+  }
+
   return (
     <main className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-xl mx-auto">
 
-        {/* Header con pasos */}
+        {/* Header */}
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <span className="text-2xl">🎟️</span>
+            <div>
+              <p className="text-xs text-gray-500">Boletos disponibles</p>
+              <p className="text-lg font-bold text-gray-800">
+                {creditos === null ? '...' : creditos === 0 ? (
+                  <a href="/precios" className="text-red-500 text-sm">Sin boletos — Comprar →</a>
+                ) : creditos}
+              </p>
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <a href="/precios" className="text-sm bg-blue-600 text-white px-3 py-1 rounded-lg hover:bg-blue-700">
+              Comprar boletos
+            </a>
+            <button onClick={handleLogout} className="text-sm text-gray-500 hover:text-gray-700">
+              Salir
+            </button>
+          </div>
+        </div>
+
+        {/* Pasos */}
         <div className="flex items-center justify-between mb-8">
           {['event', 'design', 'done'].map((s, i) => (
             <div key={s} className="flex items-center">
@@ -125,7 +179,7 @@ export default function Home() {
           ))}
         </div>
 
-        {/* Paso 1: Datos del evento */}
+        {/* Paso 1 */}
         {step === 'event' && (
           <div className="bg-white rounded-2xl shadow-lg p-8">
             <h1 className="text-2xl font-bold text-gray-800 mb-1">🎟️ Nuevo Evento</h1>
@@ -154,12 +208,11 @@ export default function Home() {
           </div>
         )}
 
-        {/* Paso 2: Subir diseño */}
+        {/* Paso 2 */}
         {step === 'design' && (
           <div className="bg-white rounded-2xl shadow-lg p-8">
             <h1 className="text-2xl font-bold text-gray-800 mb-1">🎨 Diseño del Boleto</h1>
             <p className="text-gray-500 mb-6">Sube tu diseño y haz clic donde va el QR</p>
-
             {!image ? (
               <label className="block border-2 border-dashed border-gray-300 rounded-2xl p-12 text-center cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-colors">
                 <div className="text-5xl mb-4">📁</div>
@@ -198,12 +251,13 @@ export default function Home() {
           </div>
         )}
 
-        {/* Paso 3: Listo */}
+        {/* Paso 3 */}
         {step === 'done' && (
           <div className="bg-white rounded-2xl shadow-lg p-8 text-center">
             <div className="text-6xl mb-4">🎉</div>
             <h1 className="text-2xl font-bold text-gray-800 mb-2">¡Boletos listos!</h1>
-            <p className="text-gray-500 mb-6">Se generaron <strong>{done?.total}</strong> boletos para <strong>{event?.name}</strong></p>
+            <p className="text-gray-500 mb-2">Se generaron <strong>{done?.total}</strong> boletos para <strong>{event?.name}</strong></p>
+            <p className="text-sm text-gray-400 mb-6">Te quedan <strong>{creditos}</strong> boletos en tu cuenta</p>
             <button onClick={handleDownload} className="w-full bg-green-600 text-white rounded-xl py-4 text-lg font-semibold hover:bg-green-700 mb-3">
               ⬇️ Descargar ZIP con todos los boletos
             </button>
