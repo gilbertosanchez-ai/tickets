@@ -6,23 +6,33 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY
 )
 
+const ADMIN_ID = '73cdbd9a-db59-40e0-90e3-d8fa1d56748e'
+
 export async function POST(request) {
   try {
     const { eventName, eventDate, eventVenue, quantity, userId } = await request.json()
 
-    // 1. Verificar que el usuario tenga créditos suficientes
-    const { data: credits, error: creditsError } = await supabase
-      .from('credits')
-      .select('*')
-      .eq('user_id', userId)
-      .single()
+    const esAdmin = userId === ADMIN_ID
 
-    if (creditsError || !credits) {
-      return NextResponse.json({ success: false, error: 'No tienes boletos disponibles. Compra un plan primero.' })
-    }
+    // 1. Verificar créditos solo si no es admin
+    let creditosActuales = 0
 
-    if (credits.boletos < quantity) {
-      return NextResponse.json({ success: false, error: `No tienes suficientes boletos. Tienes ${credits.boletos} y necesitas ${quantity}.` })
+    if (!esAdmin) {
+      const { data: credits, error: creditsError } = await supabase
+        .from('credits')
+        .select('*')
+        .eq('user_id', userId)
+        .single()
+
+      if (creditsError || !credits) {
+        return NextResponse.json({ success: false, error: 'No tienes boletos disponibles. Compra un plan primero.' })
+      }
+
+      if (credits.boletos < quantity) {
+        return NextResponse.json({ success: false, error: `No tienes suficientes boletos. Tienes ${credits.boletos} y necesitas ${quantity}.` })
+      }
+
+      creditosActuales = credits.boletos
     }
 
     // 2. Crear el evento
@@ -48,18 +58,20 @@ export async function POST(request) {
 
     if (ticketsError) throw ticketsError
 
-    // 4. Descontar créditos
-    await supabase
-      .from('credits')
-      .update({ boletos: credits.boletos - quantity })
-      .eq('user_id', userId)
+    // 4. Descontar créditos solo si no es admin
+    if (!esAdmin) {
+      await supabase
+        .from('credits')
+        .update({ boletos: creditosActuales - quantity })
+        .eq('user_id', userId)
+    }
 
     return NextResponse.json({
       success: true,
       event,
       tickets,
       total: tickets.length,
-      creditosRestantes: credits.boletos - quantity
+      creditosRestantes: esAdmin ? 999999 : creditosActuales - quantity
     })
 
   } catch (error) {

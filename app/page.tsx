@@ -21,6 +21,8 @@ export default function Home() {
   const [dragging, setDragging] = useState(false)
   const [done, setDone] = useState<{ zipBase64: string; total: number } | null>(null)
   const [userId, setUserId] = useState<string | null>(null)
+  const ADMIN_ID = '73cdbd9a-db59-40e0-90e3-d8fa1d56748e'
+const esAdmin = userId === ADMIN_ID
   const [creditos, setCreditos] = useState<number | null>(null)
   const imageRef = useRef<HTMLImageElement>(null)
 
@@ -48,10 +50,11 @@ export default function Home() {
   const handleCreateEvent = async () => {
     if (!form.eventName || !form.eventDate || !form.eventVenue) return alert('Llena todos los campos')
     if (!userId) return alert('Debes iniciar sesión')
-    if (creditos !== null && creditos < form.quantity) {
-      return alert(`No tienes suficientes boletos. Tienes ${creditos} y necesitas ${form.quantity}. Compra más en /precios`)
-    }
+    if (!esAdmin && creditos !== null && creditos < form.quantity) {
+  return alert(`No tienes suficientes boletos. Tienes ${creditos} y necesitas ${form.quantity}. Compra más en /precios`)
+}
     setLoading(true)
+    console.log('userId que se envía:', userId)
     const res = await fetch('/api/tickets/generate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
