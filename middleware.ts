@@ -22,9 +22,13 @@ export async function middleware(request: NextRequest) {
   )
 
   const { data: { user } } = await supabase.auth.getUser()
+  const pathname = request.nextUrl.pathname
 
-  // Si no está logueado y trata de entrar a páginas protegidas, redirige al login
-  if (!user && !request.nextUrl.pathname.startsWith('/login') && !request.nextUrl.pathname.startsWith('/registro') && !request.nextUrl.pathname.startsWith('/ticket')) {
+  // Rutas que cualquiera puede ver sin login
+  const publicRoutes = ['/', '/landing', '/login', '/registro', '/precios', '/pago-exitoso', '/ticket', '/scan']
+  const isPublic = publicRoutes.some(route => pathname === route || pathname.startsWith(route + '/'))
+
+  if (!user && !isPublic) {
     return NextResponse.redirect(new URL('/login', request.url))
   }
 
