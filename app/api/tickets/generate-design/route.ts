@@ -7,11 +7,11 @@ import path from 'path'
 
 // Registrar fuente
 registerFont(
-  path.join(process.cwd(), 'node_modules/@fontsource/roboto/files/roboto-latin-400-normal.woff2'),
+  path.join(process.cwd(), 'public', 'fonts', 'Roboto-Regular.ttf'),
   { family: 'Roboto' }
 )
 registerFont(
-  path.join(process.cwd(), 'node_modules/@fontsource/roboto/files/roboto-latin-700-normal.woff2'),
+  path.join(process.cwd(), 'public', 'fonts', 'Roboto-Bold.ttf'),
   { family: 'Roboto', weight: 'bold' }
 )
 
