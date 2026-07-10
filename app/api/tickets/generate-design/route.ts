@@ -1,9 +1,19 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
-import { createCanvas, loadImage } from 'canvas'
+import { createCanvas, loadImage, registerFont } from 'canvas'
 import QRCode from 'qrcode'
 import JSZip from 'jszip'
 import path from 'path'
+
+// Registrar fuente
+registerFont(
+  path.join(process.cwd(), 'node_modules/@fontsource/roboto/files/roboto-latin-400-normal.woff2'),
+  { family: 'Roboto' }
+)
+registerFont(
+  path.join(process.cwd(), 'node_modules/@fontsource/roboto/files/roboto-latin-700-normal.woff2'),
+  { family: 'Roboto', weight: 'bold' }
+)
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -68,13 +78,13 @@ export async function POST(request: Request) {
 
       // Nombre del evento
       ctx.fillStyle = '#1a1a2e'
-      ctx.font = 'bold 38px sans-serif'
+      ctx.font = 'bold 40px Roboto'
       ctx.textAlign = 'center'
       ctx.fillText(event.name, W / 2, INFO_Y_NOMBRE)
 
       // Lugar
       ctx.fillStyle = '#555555'
-      ctx.font = '28px sans-serif'
+      ctx.font = '30px Roboto'
       ctx.fillText(event.venue, W / 2, INFO_Y_LUGAR)
 
       // QR
@@ -91,12 +101,12 @@ export async function POST(request: Request) {
         weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
       })
       ctx.fillStyle = '#1a1a2e'
-      ctx.font = 'bold 26px sans-serif'
+      ctx.font = 'bold 29px Roboto'
       ctx.fillText(fecha, W / 2, FECHA_Y)
 
       // Número de boleto
       ctx.fillStyle = '#666666'
-      ctx.font = '24px sans-serif'
+      ctx.font = '28px Roboto'
       ctx.fillText(`Boleto #${String(ticket.ticket_number).padStart(3, '0')}`, W / 2, NUMERO_Y)
 
       // Logo opcional centrado abajo
