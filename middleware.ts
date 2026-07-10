@@ -24,12 +24,15 @@ export async function middleware(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
   const pathname = request.nextUrl.pathname
 
-  // Rutas que cualquiera puede ver sin login
-  const publicRoutes = ['/', '/landing', '/login', '/registro', '/precios', '/pago-exitoso', '/ticket', '/scan']
-  const isPublic = publicRoutes.some(route => pathname === route || pathname.startsWith(route + '/'))
+  const publicRoutes = ['/', '/landing', '/precios', '/pago-exitoso', '/ticket']
+  const isPublic = publicRoutes.some(r => pathname === r || pathname.startsWith(r + '/'))
 
-  if (!user && !isPublic) {
+  if (!user && !isPublic && !pathname.startsWith('/login') && !pathname.startsWith('/registro')) {
     return NextResponse.redirect(new URL('/login', request.url))
+  }
+
+  if (user && (pathname === '/login' || pathname === '/registro')) {
+    return NextResponse.redirect(new URL('/crear', request.url))
   }
 
   return supabaseResponse
