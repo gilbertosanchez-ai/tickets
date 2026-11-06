@@ -28,11 +28,16 @@ export async function middleware(request: NextRequest) {
   const isPublic = publicRoutes.some(r => pathname === r || pathname.startsWith(r + '/'))
 
   if (!user && !isPublic && !pathname.startsWith('/login') && !pathname.startsWith('/registro')) {
-    return NextResponse.redirect(new URL('/login', request.url))
+    const login = new URL('/login', request.url)
+    if (pathname === '/scan') login.searchParams.set('next', '/scan')
+    return NextResponse.redirect(login)
   }
 
   if (user && (pathname === '/login' || pathname === '/registro')) {
-    return NextResponse.redirect(new URL('/crear', request.url))
+    const destino = pathname === '/login' && request.nextUrl.searchParams.get('next') === '/scan'
+      ? '/scan'
+      : '/crear'
+    return NextResponse.redirect(new URL(destino, request.url))
   }
 
   return supabaseResponse

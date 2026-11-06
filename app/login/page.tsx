@@ -1,14 +1,13 @@
 'use client'
 import { useState } from 'react'
 import { createBrowserClient } from '@supabase/ssr'
-import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const router = useRouter()
 
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -23,14 +22,17 @@ export default function LoginPage() {
       setError('Email o contraseña incorrectos')
       setLoading(false)
     } else {
-  // Forzamos recarga completa para que el middleware lea la cookie nueva
-  window.location.href = '/crear'
+      const destino = new URLSearchParams(window.location.search).get('next')
+      window.location.href = destino === '/scan' ? '/scan' : '/crear'
     }
   }
 
   return (
     <main className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
       <div className="bg-white rounded-2xl shadow-lg p-8 w-full max-w-sm">
+        <Link href="/" className="mb-5 inline-block text-sm font-medium text-blue-600 hover:underline">
+          ← Regresar al inicio
+        </Link>
         <div className="text-center mb-8">
           <div className="text-5xl mb-3">🎟</div>
           <h1 className="text-2xl font-bold text-gray-800">Iniciar Sesión</h1>

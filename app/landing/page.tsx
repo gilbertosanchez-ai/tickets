@@ -34,12 +34,15 @@ export default function LandingPage() {
 
       {/* Header */}
       <header className="fixed top-0 w-full bg-white/80 backdrop-blur-md z-50 border-b border-gray-100">
-        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3 flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <span className="text-2xl">🎟</span>
             <span className="font-bold text-xl text-gray-800">PubliTickets</span>
           </div>
-          <div className="flex gap-3">
+          <div className="flex flex-wrap gap-1 sm:gap-3">
+            <Link href="/scan" className="text-sm text-blue-700 px-2 sm:px-4 py-2 rounded-lg hover:bg-blue-50">
+              Escáner de boletos
+            </Link>
             <Link href="/login" className="text-sm text-gray-600 hover:text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-100">
               Iniciar sesión
             </Link>
