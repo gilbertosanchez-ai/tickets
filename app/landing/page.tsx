@@ -66,9 +66,12 @@ export default function LandingPage() {
             <motion.p variants={fadeUp} className="text-xl text-gray-500 mb-8">
               Diseño profesional, validación en tiempo real y descarga instantánea. Perfecto para graduaciones, bodas y eventos.
             </motion.p>
-            <motion.div variants={fadeUp} className="flex gap-4">
+            <motion.div variants={fadeUp} className="flex flex-wrap gap-4">
               <Link href="/registro" className="bg-blue-600 text-white px-8 py-4 rounded-xl font-semibold text-lg hover:bg-blue-700 transition-colors">
                 Crear mis boletos →
+              </Link>
+              <Link href="/scan" className="bg-blue-600 text-white px-8 py-4 rounded-xl font-semibold text-lg hover:bg-blue-700 transition-colors">
+                Escáner de boletos
               </Link>
               <Link href="#precios" className="border border-gray-200 text-gray-700 px-8 py-4 rounded-xl font-semibold text-lg hover:bg-gray-50 transition-colors">
                 Ver precios
