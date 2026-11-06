@@ -42,6 +42,12 @@ export default async function PagoExitosoPage({ searchParams }: {
         ) : (
           <Link href="/" className="font-semibold text-blue-700">Regresar al inicio</Link>
         )}
+        <p className="mt-6 text-sm text-gray-600">
+          ¿Ya pagaste y no aparece tu código? Escríbenos a{' '}
+          <a href="mailto:publiestampagil@gmail.com" className="break-all font-medium text-blue-700 underline">
+            publiestampagil@gmail.com
+          </a>{' '}con la referencia de tu pago.
+        </p>
       </div>
     </main>
   )
