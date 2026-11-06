@@ -26,16 +26,17 @@ export default function PreciosPage() {
 
   const handleComprar = async (planId: string) => {
     setLoading(planId)
-    const res = await fetch('/api/tickets/checkout', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ plan: planId, userId })
-    })
-    const data = await res.json()
-    if (data.url) {
-      window.location.href = data.url
-    } else {
-      alert('Error: ' + data.error)
+    try {
+      const res = await fetch('/api/tickets/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ plan: planId })
+      })
+      const data = await res.json()
+      if (!res.ok || !data.url) throw new Error(data.error || 'No se pudo abrir el pago.')
+      window.location.assign(data.url)
+    } catch (error) {
+      alert(error instanceof Error ? error.message : 'No se pudo abrir el pago.')
       setLoading(null)
     }
   }
@@ -88,10 +89,10 @@ export default function PreciosPage() {
 
               <button
                 onClick={() => handleComprar(plan.id)}
-                disabled={loading === plan.id}
+                disabled={loading !== null}
                 className={`w-full py-3 rounded-xl font-semibold transition-colors ${plan.popular ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-gray-800 text-white hover:bg-gray-900'} disabled:opacity-50`}
               >
-                {loading === plan.id ? 'Redirigiendo...' : 'Comprar ahora'}
+                {loading === plan.id ? 'Redirigiendo...' : userId ? 'Comprar ahora' : 'Comprar sin registro'}
               </button>
             </div>
           ))}

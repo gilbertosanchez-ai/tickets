@@ -46,8 +46,8 @@ export default function LandingPage() {
             <Link href="/login" className="text-sm text-gray-600 hover:text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-100">
               Iniciar sesión
             </Link>
-            <Link href="/registro" className="text-sm bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 font-medium">
-              Empezar gratis
+            <Link href="/codigo" className="text-sm bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 font-medium">
+              Entrar con mi código
             </Link>
           </div>
         </div>
@@ -212,10 +212,10 @@ export default function LandingPage() {
                   <li className="flex gap-2"><span className="text-green-500">✓</span> Descarga ZIP inmediata</li>
                 </ul>
                 <Link
-                  href="/registro"
+                  href="/precios"
                   className={`w-full py-3 rounded-xl font-semibold text-center transition-colors ${plan.popular ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-gray-800 text-white hover:bg-gray-900'}`}
                 >
-                  Empezar →
+                  Comprar sin registro →
                 </Link>
               </motion.div>
             ))}

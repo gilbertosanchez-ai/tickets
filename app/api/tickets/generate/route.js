@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
+import { serverAuth } from '@/lib/server-auth'
 import { NextResponse } from 'next/server'
 
 const supabase = createClient(
@@ -10,8 +11,15 @@ const ADMIN_ID = '73cdbd9a-db59-40e0-90e3-d8fa1d56748e'
 
 export async function POST(request) {
   try {
-    const { eventName, eventDate, eventVenue, quantity, userId } = await request.json()
+    const { eventName, eventDate, eventVenue, quantity } = await request.json()
 
+    const auth = await serverAuth()
+    const { data: { user } } = await auth.auth.getUser()
+    if (!user) return NextResponse.json({ success: false, error: 'Inicia sesión para crear el evento.' }, { status: 401 })
+    if (!Number.isInteger(quantity) || quantity < 1 || quantity > 10000) {
+      return NextResponse.json({ success: false, error: 'Cantidad de boletos inválida.' }, { status: 400 })
+    }
+    const userId = user.id
     const esAdmin = userId === ADMIN_ID
 
     // 1. Verificar créditos solo si no es admin

@@ -22,12 +22,20 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: message }, { status: 400 })
   }
 
-  if (event.type === 'checkout.session.completed') {
+  if (event.type === 'checkout.session.completed' || event.type === 'checkout.session.async_payment_succeeded') {
     const session = event.data.object as Stripe.Checkout.Session
+    if (session.payment_status !== 'paid') return NextResponse.json({ received: true })
     const boletos = parseInt(session.metadata?.boletos || '0')
     const userId = session.metadata?.user_id
 
     if (userId && boletos > 0) {
+      if (session.metadata?.fulfillment_version === '2') {
+        const { error } = await supabase.rpc('fulfill_ticket_checkout', {
+          p_session_id: session.id, p_user_id: userId, p_boletos: boletos,
+        })
+        if (error) return NextResponse.json({ error: 'No se pudo acreditar la compra' }, { status: 500 })
+        return NextResponse.json({ received: true })
+      }
       const { data: existing } = await supabase
         .from('credits')
         .select('*')

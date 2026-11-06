@@ -1,67 +1,48 @@
-'use client'
-import { useSearchParams } from 'next/navigation'
-import { Suspense, useEffect, useState } from 'react'
-import { createBrowserClient } from '@supabase/ssr'
+import Link from 'next/link'
+import { cookies } from 'next/headers'
+import Stripe from 'stripe'
+import { admin } from '@/lib/server-auth'
+import { CodeForm } from '@/app/login/code-form'
 
-function PagoExitosoContent() {
-  const searchParams = useSearchParams()
-  const boletos = parseInt(searchParams.get('boletos') || '0')
-  const [guardado, setGuardado] = useState(false)
-
-  const supabase = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  )
-
-  useEffect(() => {
-    const guardarCreditos = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user || boletos === 0) return
-
-      const { data: existing } = await supabase
-        .from('credits')
-        .select('*')
-        .eq('user_id', user.id)
-        .single()
-
-      if (existing) {
-        await supabase
-          .from('credits')
-          .update({ boletos: existing.boletos + boletos })
-          .eq('user_id', user.id)
-      } else {
-        await supabase
-          .from('credits')
-          .insert({ user_id: user.id, boletos })
-      }
-      setGuardado(true)
-    }
-    guardarCreditos()
-  }, [])
+export default async function PagoExitosoPage({ searchParams }: {
+  searchParams: Promise<{ session_id?: string }>
+}) {
+  const { session_id: sessionId } = await searchParams
+  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!)
+  const session = typeof sessionId === 'string' && /^cs_(live|test)_[A-Za-z0-9]+$/.test(sessionId)
+    ? await stripe.checkout.sessions.retrieve(sessionId).catch(() => null)
+    : null
+  const paid = session?.payment_status === 'paid'
+  const { data: fulfillment } = paid && session.metadata?.fulfillment_version === '2'
+    ? await admin.from('ticket_checkout_fulfillments').select('session_id').eq('session_id', session.id).maybeSingle()
+    : { data: null }
+  const ready = paid && (fulfillment || session.metadata?.fulfillment_version !== '2')
+  const jar = await cookies()
+  const code = ready && sessionId ? jar.get(`guest-${sessionId}`)?.value : undefined
 
   return (
-    <main className="min-h-screen bg-green-50 flex items-center justify-center p-6">
-      <div className="bg-white rounded-2xl shadow-lg p-8 w-full max-w-sm text-center">
-        <div className="text-6xl mb-4">🎉</div>
-        <h1 className="text-2xl font-bold text-gray-800 mb-2">¡Pago exitoso!</h1>
-        <p className="text-gray-500 mb-6">
-          Se agregaron <strong>{boletos} boletos</strong> a tu cuenta
-        </p>
-        
-          <a href="/"
-          className="w-full block bg-blue-600 text-white rounded-xl py-3 font-semibold hover:bg-blue-700 text-center"
-        >
-          Crear mi primer evento →
-        </a>
+    <main className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
+      <div className="bg-white rounded-2xl shadow-lg p-8 w-full max-w-md text-center">
+        <h1 className="text-2xl font-bold text-gray-800 mb-3">
+          {ready ? '¡Pago confirmado!' : session ? 'Estamos confirmando tu compra' : 'Compra no encontrada'}
+        </h1>
+        {code ? (
+          <>
+            <p className="mb-3 text-gray-600">Guarda este código privado. Lo podrás usar para recuperar y descargar tus boletos desde otro dispositivo.</p>
+            <p className="mb-5 break-all rounded-lg bg-blue-50 p-3 font-mono font-bold text-blue-900">{code}</p>
+            <CodeForm initialCode={code} destination="/crear" />
+          </>
+        ) : ready ? (
+          <Link href="/crear" className="block rounded-xl bg-blue-600 py-3 font-semibold text-white">Crear evento</Link>
+        ) : session ? (
+          <>
+            <p className="mb-4 text-gray-600">Conserva esta pestaña y vuelve a consultar en unos segundos.</p>
+            <a href={`/pago-exitoso?session_id=${encodeURIComponent(session.id)}`} className="font-semibold text-blue-700">Volver a consultar</a>
+          </>
+        ) : (
+          <Link href="/" className="font-semibold text-blue-700">Regresar al inicio</Link>
+        )}
       </div>
     </main>
-  )
-}
-
-export default function PagoExitosoPage() {
-  return (
-    <Suspense>
-      <PagoExitosoContent />
-    </Suspense>
   )
 }

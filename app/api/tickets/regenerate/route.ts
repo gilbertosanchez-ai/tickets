@@ -1,3 +1,4 @@
+import { serverAuth } from '@/lib/server-auth'
 import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
 import QRCode from 'qrcode'
@@ -12,6 +13,17 @@ const supabase = createClient(
 export async function POST(request: Request) {
   try {
     const { eventId } = await request.json()
+    const auth = await serverAuth()
+    const { data: { user } } = await auth.auth.getUser()
+    if (!user || typeof eventId !== 'string') {
+      return NextResponse.json({ success: false, error: 'Acceso requerido.' }, { status: 401 })
+    }
+    const { data: ownedEvent } = await supabase.from('events').select('id')
+      .eq('id', eventId).eq('user_id', user.id).maybeSingle()
+    if (!ownedEvent) {
+      return NextResponse.json({ success: false, error: 'Evento no encontrado.' }, { status: 404 })
+    }
+
 
     // 1. Obtener plantilla del evento
     const { data: template, error: templateError } = await supabase

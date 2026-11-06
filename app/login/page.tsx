@@ -70,6 +70,7 @@ export default function LoginPage() {
             {loading ? 'Entrando...' : 'Entrar'}
           </button>
 
+          <Link href="/codigo" className="block text-center text-sm font-medium text-blue-700 hover:underline">Entrar con mi código</Link>
           <p className="text-center text-sm text-gray-500">
             ¿No tienes cuenta?{' '}
             <a href="/registro" className="text-blue-600 font-medium hover:underline">
