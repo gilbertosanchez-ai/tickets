@@ -20,6 +20,9 @@ export default async function PagoExitosoPage({ searchParams }: {
   const jar = await cookies()
   const code = ready && sessionId ? jar.get(`guest-${sessionId}`)?.value : undefined
 
+  const draft = session?.metadata?.draft_id
+  const destination = draft ? `/crear?borrador=${encodeURIComponent(draft)}` as const : '/crear'
+
   return (
     <main className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
       <div className="bg-white rounded-2xl shadow-lg p-8 w-full max-w-md text-center">
@@ -30,10 +33,10 @@ export default async function PagoExitosoPage({ searchParams }: {
           <>
             <p className="mb-3 text-gray-600">Guarda este código privado. Lo podrás usar para recuperar y descargar tus boletos desde otro dispositivo.</p>
             <p className="mb-5 break-all rounded-lg bg-blue-50 p-3 font-mono font-bold text-blue-900">{code}</p>
-            <CodeForm initialCode={code} destination="/crear" />
+            <CodeForm initialCode={code} destination={destination} />
           </>
         ) : ready ? (
-          <Link href="/crear" className="block rounded-xl bg-blue-600 py-3 font-semibold text-white">Crear evento</Link>
+          <Link href={destination} className="block rounded-xl bg-blue-600 py-3 font-semibold text-white">{draft ? 'Continuar con mi diseño' : 'Crear evento'}</Link>
         ) : session ? (
           <>
             <p className="mb-4 text-gray-600">Conserva esta pestaña y vuelve a consultar en unos segundos.</p>

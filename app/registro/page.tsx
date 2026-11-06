@@ -79,10 +79,6 @@ export default function RegistroPage() {
           <p className="text-gray-500 text-sm mt-1">Empieza a generar boletos</p>
         </div>
 
-        <Link href="/precios" className="mb-5 block rounded-lg border border-blue-200 bg-blue-50 px-3 py-3 text-center font-semibold text-blue-700 hover:bg-blue-100">
-          Comprar sin registro →
-        </Link>
-
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
@@ -124,6 +120,10 @@ export default function RegistroPage() {
           >
             {loading ? 'Creando cuenta...' : 'Crear Cuenta'}
           </button>
+
+          <Link href="/disenar" className="block rounded-lg border border-blue-200 bg-blue-50 px-3 py-3 text-center font-semibold text-blue-700 hover:bg-blue-100">
+            Comprar sin registro →
+          </Link>
 
           <p className="text-center text-sm text-gray-500">
             ¿Ya tienes cuenta?{' '}

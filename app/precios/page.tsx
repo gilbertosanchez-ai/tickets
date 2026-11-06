@@ -2,14 +2,12 @@
 import { useState, useEffect } from 'react'
 import { createBrowserClient } from '@supabase/ssr'
 
-const planes = [
-  { id: 'starter', nombre: 'Starter', boletos: 100, precio: 78, popular: false },
-  { id: 'popular', nombre: 'Popular', boletos: 500, precio: 345, popular: true },
-  { id: 'pro', nombre: 'Pro', boletos: 2000, precio: 1240, popular: false },
-  { id: 'graduacion', nombre: 'Graduación', boletos: 10000, precio: 5900, popular: false },
-]
+import Link from 'next/link'
+import { ticketPlans as planes, quoteTickets, formatTicketPrice } from '@/lib/ticket-pricing'
 
 export default function PreciosPage() {
+  const [quantity, setQuantity] = useState('')
+  const cents = quoteTickets(Number(quantity))
   const [loading, setLoading] = useState<string | null>(null)
   const [userId, setUserId] = useState<string | null>(null)
 
@@ -24,13 +22,13 @@ export default function PreciosPage() {
     })
   }, [])
 
-  const handleComprar = async (planId: string) => {
+  const handleComprar = async (planId: string, quantity?: number) => {
     setLoading(planId)
     try {
       const res = await fetch('/api/tickets/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ plan: planId })
+        body: JSON.stringify({ plan: planId, quantity })
       })
       const data = await res.json()
       if (!res.ok || !data.url) throw new Error(data.error || 'No se pudo abrir el pago.')
@@ -44,11 +42,29 @@ export default function PreciosPage() {
   return (
     <main className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-4xl mx-auto">
+        <Link href="/" className="mb-4 inline-block text-sm font-medium text-blue-700">← Regresar al inicio</Link>
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-gray-800 mb-3">🎟️ Planes y Precios</h1>
           <p className="text-gray-500 text-lg">Compra boletos y úsalos cuando los necesites</p>
         </div>
 
+        <section className="mb-8 rounded-2xl bg-white p-6 shadow">
+          <label htmlFor="quantity" className="block font-semibold text-gray-800">¿Cuántos boletos necesitas?</label>
+          <input id="quantity" type="number" min="100" max="10000" step="1" value={quantity}
+            onChange={event => setQuantity(event.target.value)} placeholder="Ej. 170"
+            className="mt-2 w-full rounded-lg border px-3 py-2 text-gray-800 sm:w-48" />
+          <p className="my-2 text-sm text-gray-600" aria-live="polite">
+            {cents === null ? 'Elige de 100 a 10,000 boletos.' : `Total: ${formatTicketPrice(cents)}`}
+          </p>
+          {userId ? (
+            <button disabled={cents === null || loading !== null} onClick={() => handleComprar('personalizado', Number(quantity))}
+              className="rounded-lg bg-blue-600 px-4 py-2 font-semibold text-white disabled:opacity-50">Comprar boletos</button>
+          ) : (
+            <Link href={cents === null ? '/disenar' : `/disenar?cantidad=${Number(quantity)}`} className="font-semibold text-blue-700">
+              Diseñar mis boletos sin registro →
+            </Link>
+          )}
+        </section>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {planes.map(plan => (
             <div
@@ -87,6 +103,7 @@ export default function PreciosPage() {
                 </li>
               </ul>
 
+              {userId ? (
               <button
                 onClick={() => handleComprar(plan.id)}
                 disabled={loading !== null}
@@ -94,6 +111,11 @@ export default function PreciosPage() {
               >
                 {loading === plan.id ? 'Redirigiendo...' : userId ? 'Comprar ahora' : 'Comprar sin registro'}
               </button>
+              ) : (
+                <Link href={`/disenar?cantidad=${plan.boletos}`} className="rounded-xl bg-blue-600 py-3 text-center font-semibold text-white">
+                  Comprar sin registro
+                </Link>
+              )}
             </div>
           ))}
         </div>

@@ -4,7 +4,7 @@ import { useState, type FormEvent } from 'react'
 
 export function CodeForm({ initialCode, destination = '/eventos' }: {
   initialCode?: string
-  destination?: '/crear' | '/eventos'
+  destination?: '/crear' | '/eventos' | `/crear?borrador=${string}`
 }) {
   const [code, setCode] = useState(initialCode ?? '')
   const [loading, setLoading] = useState(false)
@@ -40,7 +40,7 @@ export function CodeForm({ initialCode, destination = '/eventos' }: {
       )}
       {error && <p role="alert" className="text-sm text-red-600">{error}</p>}
       <button disabled={loading} className="w-full rounded-lg bg-blue-600 py-3 font-semibold text-white disabled:opacity-50">
-        {loading ? 'Entrando…' : initialCode ? 'Crear mi evento' : 'Entrar con mi código'}
+        {loading ? 'Entrando…' : initialCode ? destination.includes('borrador=') ? 'Continuar con mi diseño' : 'Crear mi evento' : 'Entrar con mi código'}
       </button>
     </form>
   )

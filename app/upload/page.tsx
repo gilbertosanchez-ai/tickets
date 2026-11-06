@@ -9,7 +9,7 @@ export default function UploadPage() {
   const [dragging, setDragging] = useState(false)
   const [eventId, setEventId] = useState('')
   const [loading, setLoading] = useState(false)
-  const [done, setDone] = useState<{ zipBase64: string; total: number } | null>(null)
+  const [done, setDone] = useState<{ downloadUrl: string; total: number } | null>(null)
   const imageRef = useRef<HTMLImageElement>(null)
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -76,7 +76,7 @@ export default function UploadPage() {
   const handleDownload = () => {
     if (!done) return
     const link = document.createElement('a')
-    link.href = `data:application/zip;base64,${done.zipBase64}`
+    link.href = done.downloadUrl
     link.download = 'boletos.zip'
     link.click()
   }

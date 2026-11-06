@@ -1,3 +1,4 @@
+import { saveTicketArchive, getTicketArchive } from '@/lib/ticket-archive'
 import { serverAuth } from '@/lib/server-auth'
 import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
@@ -24,6 +25,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: 'Evento no encontrado.' }, { status: 404 })
     }
 
+
+    const savedUrl = await getTicketArchive(eventId)
+    if (savedUrl) return NextResponse.json({ success: true, downloadUrl: savedUrl })
 
     // 1. Obtener plantilla del evento
     const { data: template, error: templateError } = await supabase
@@ -78,10 +82,8 @@ export async function POST(request: Request) {
       zip.file(`boleto-${ticket.ticket_number}.png`, finalImage)
     }
 
-    const zipBuffer = await zip.generateAsync({ type: 'nodebuffer' })
-    const zipBase64 = zipBuffer.toString('base64')
-
-    return NextResponse.json({ success: true, zipBase64, total: tickets.length })
+    const downloadUrl = await saveTicketArchive(eventId, zip)
+    return NextResponse.json({ success: true, downloadUrl, total: tickets.length })
 
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Error desconocido'

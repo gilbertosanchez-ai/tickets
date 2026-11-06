@@ -1,4 +1,5 @@
 import Stripe from 'stripe'
+import { quoteTickets } from '@/lib/ticket-pricing'
 import { randomBytes } from 'node:crypto'
 import { cookies } from 'next/headers'
 import { admin, guestEmail, serverAuth } from '@/lib/server-auth'
@@ -15,9 +16,17 @@ const PLANES: Record<string, { priceId: string; boletos: number; nombre: string 
 
 export async function POST(request: Request) {
   try {
-    const { plan } = await request.json()
+    const { plan, quantity, draft } = await request.json()
     const planData = typeof plan === 'string' && Object.hasOwn(PLANES, plan) ? PLANES[plan] : null
-    if (!planData) throw new Error('Plan no válido')
+    const cents = typeof quantity === 'number' ? quoteTickets(quantity) : null
+    if (!planData && cents === null) {
+      return NextResponse.json({ error: 'Elige entre 100 y 10,000 boletos.' }, { status: 400 })
+    }
+    const boletos = planData?.boletos ?? quantity
+    const draftId = typeof draft === 'string' && /^[0-9a-f-]{36}$/.test(draft) ? draft : ''
+    const lineItem = planData
+      ? { price: planData.priceId, quantity: 1 }
+      : { price_data: { currency: 'mxn', unit_amount: cents!, product_data: { name: `${boletos} boletos QR` } }, quantity: 1 }
 
     const { error: readinessError } = await admin.from('ticket_checkout_fulfillments').select('session_id').limit(0)
     if (readinessError) return NextResponse.json({ error: 'El pago aún no está disponible.' }, { status: 503 })
@@ -35,14 +44,15 @@ export async function POST(request: Request) {
       userId = data.user.id
     }
     const session = await stripe.checkout.sessions.create({
-      line_items: [{ price: planData.priceId, quantity: 1 }],
+      line_items: [lineItem],
       mode: 'payment',
       integration_identifier: 'ticket-checkout-nqvpajrt',
       success_url: `${process.env.NEXT_PUBLIC_APP_URL}/pago-exitoso?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/precios`,
+      cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}${draftId ? `/disenar?borrador=${draftId}` : "/precios"}`,
       metadata: {
-        boletos: planData.boletos.toString(),
-        plan,
+        boletos: String(boletos),
+        plan: planData ? plan : "personalizado",
+        draft_id: draftId,
         user_id: userId,
         fulfillment_version: '2'
       }

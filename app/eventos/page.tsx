@@ -55,7 +55,7 @@ export default function EventosPage() {
       const data = await res.json()
       if (data.success) {
         const link = document.createElement('a')
-        link.href = `data:application/zip;base64,${data.zipBase64}`
+        link.href = data.downloadUrl
         link.download = `boletos-${eventoNombre}.zip`
         link.click()
       } else {
