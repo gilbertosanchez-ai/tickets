@@ -1,7 +1,7 @@
 'use client'
 import { useState } from 'react'
 import { createBrowserClient } from '@supabase/ssr'
-import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 
 export default function RegistroPage() {
   const [email, setEmail] = useState('')
@@ -10,7 +10,6 @@ export default function RegistroPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
-  const router = useRouter()
 
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -66,11 +65,23 @@ export default function RegistroPage() {
   return (
     <main className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
       <div className="bg-white rounded-2xl shadow-lg p-8 w-full max-w-sm">
-        <div className="text-center mb-8">
-          <div className="text-5xl mb-3">🎟</div>
+        <Link href="/" className="mb-5 inline-block text-sm font-medium text-blue-700 hover:underline">
+          ← Regresar al inicio
+        </Link>
+        <div className="mb-5 text-center">
+          <div className="mx-auto mb-3 grid size-14 place-items-center rounded-2xl bg-blue-100 text-blue-700">
+            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="size-8">
+              <path d="M4 6h16a1 1 0 0 1 1 1v2a3 3 0 0 0 0 6v2a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-2a3 3 0 0 0 0-6V7a1 1 0 0 1 1-1Z" />
+              <path d="M15 8v1m0 2.5v1m0 2.5v1" />
+            </svg>
+          </div>
           <h1 className="text-2xl font-bold text-gray-800">Crear Cuenta</h1>
           <p className="text-gray-500 text-sm mt-1">Empieza a generar boletos</p>
         </div>
+
+        <Link href="/precios" className="mb-5 block rounded-lg border border-blue-200 bg-blue-50 px-3 py-3 text-center font-semibold text-blue-700 hover:bg-blue-100">
+          Comprar sin registro →
+        </Link>
 
         <div className="space-y-4">
           <div>
