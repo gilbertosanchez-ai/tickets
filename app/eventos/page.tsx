@@ -1,4 +1,5 @@
 'use client'
+import Link from 'next/link'
 import { useState, useEffect } from 'react'
 import { createBrowserClient } from '@supabase/ssr'
 
@@ -74,9 +75,9 @@ export default function EventosPage() {
             <h1 className="text-2xl font-bold text-gray-800">📋 Mis Eventos</h1>
             <p className="text-gray-500 text-sm">Todos tus eventos creados</p>
           </div>
-          <a href="/" className="bg-blue-600 text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-blue-700">
+          <Link href="/crear" className="bg-blue-600 text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-blue-700">
             + Nuevo evento
-          </a>
+          </Link>
         </div>
 
         {loading && (
@@ -88,9 +89,9 @@ export default function EventosPage() {
             <div className="text-5xl mb-4">🎟️</div>
             <h2 className="text-xl font-bold text-gray-700 mb-2">No tienes eventos aún</h2>
             <p className="text-gray-400 mb-6">Crea tu primer evento y genera tus boletos</p>
-            <a href="/" className="bg-blue-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-blue-700">
+            <Link href="/crear" className="bg-blue-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-blue-700">
               Crear primer evento →
-            </a>
+            </Link>
           </div>
         )}
 
