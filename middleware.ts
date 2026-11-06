@@ -2,6 +2,9 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 export async function middleware(request: NextRequest) {
+  const pathname = request.nextUrl.pathname
+  if (pathname === '/scan' || pathname === '/scan/') return NextResponse.next()
+
   let supabaseResponse = NextResponse.next({ request })
 
   const supabase = createServerClient(
@@ -22,22 +25,15 @@ export async function middleware(request: NextRequest) {
   )
 
   const { data: { user } } = await supabase.auth.getUser()
-  const pathname = request.nextUrl.pathname
-
   const publicRoutes = ['/', '/landing', '/precios', '/pago-exitoso', '/ticket']
   const isPublic = publicRoutes.some(r => pathname === r || pathname.startsWith(r + '/'))
 
   if (!user && !isPublic && !pathname.startsWith('/login') && !pathname.startsWith('/registro')) {
-    const login = new URL('/login', request.url)
-    if (pathname === '/scan') login.searchParams.set('next', '/scan')
-    return NextResponse.redirect(login)
+    return NextResponse.redirect(new URL('/login', request.url))
   }
 
   if (user && (pathname === '/login' || pathname === '/registro')) {
-    const destino = pathname === '/login' && request.nextUrl.searchParams.get('next') === '/scan'
-      ? '/scan'
-      : '/crear'
-    return NextResponse.redirect(new URL(destino, request.url))
+    return NextResponse.redirect(new URL('/crear', request.url))
   }
 
   return supabaseResponse

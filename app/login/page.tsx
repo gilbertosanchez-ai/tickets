@@ -22,8 +22,7 @@ export default function LoginPage() {
       setError('Email o contraseña incorrectos')
       setLoading(false)
     } else {
-      const destino = new URLSearchParams(window.location.search).get('next')
-      window.location.href = destino === '/scan' ? '/scan' : '/crear'
+      window.location.href = '/crear'
     }
   }
 
